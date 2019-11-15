@@ -29,3 +29,13 @@ GBytes		*fu_vli_usbhub_device_spi_read		(FuVliUsbhubDevice *self,
 							 guint32	 address,
 							 gsize		 bufsz,
 							 GError		**error);
+gboolean	 fu_vli_usbhub_device_i2c_write_data	(FuVliUsbhubDevice *self,
+							 guint8		 skip_s,
+							 guint8		 skip_p,
+							 const guint8	*buf,
+							 gsize		 bufsz,
+							 GError		**error);
+gboolean	 fu_vli_usbhub_device_i2c_read_data	(FuVliUsbhubDevice *self,
+							 guint8		 cmd,
+							 guint8		*buf,
+							 GError		**error);

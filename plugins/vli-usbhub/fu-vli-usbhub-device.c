@@ -15,6 +15,8 @@
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
+#include "fu-vli-usbhub-i2c-common.h"
+#include "fu-vli-usbhub-i2c-device.h"
 #include "fu-vli-usbhub-pd-common.h"
 #include "fu-vli-usbhub-pd-device.h"
 
@@ -81,6 +83,57 @@ fu_vli_usbhub_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "H2Hdr@0x1000", NULL);
 		fu_vli_usbhub_header_to_string (&self->hd2_hdr, idt + 1, str);
 	}
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_read_data (FuVliUsbhubDevice *self,
+				    guint8 cmd,
+				    guint8 *buf,
+				    GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = ((guint16) FU_VLI_USBHUB_I2C_ADDR_WRITE << 8) | cmd;
+	guint16 index = (guint16) FU_VLI_USBHUB_I2C_ADDR_READ << 8;
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xa0, value, index,
+					    buf, 0x01, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to read I2C: ");
+		return FALSE;
+	}
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cReadData", buf, 0x1);
+	return TRUE;
+}
+
+gboolean
+fu_vli_usbhub_device_i2c_write_data (FuVliUsbhubDevice *self,
+				     guint8 skip_s,
+				     guint8 skip_p,
+				     const guint8 *buf,
+				     gsize bufsz,
+				     GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = (((guint16) skip_s) << 8) | skip_p;
+	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
+		fu_common_dump_raw (G_LOG_DOMAIN, "I2cWriteData", buf, bufsz);
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    0xb0, value, 0x0,
+					    (guint8 *) buf, bufsz, NULL,
+					    FU_VLI_USBHUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to write I2C @0x%x: ", value);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
