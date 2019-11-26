@@ -230,6 +230,13 @@ gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
 
+platform_deps = []
+if get_option('default_library') != 'static'
+  if host_machine.system() == 'windows'
+    platform_deps += cc.find_library('shlwapi')
+  endif
+endif
+
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
