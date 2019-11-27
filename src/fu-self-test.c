@@ -2073,6 +2073,10 @@ fu_plugin_module_func (gconstpointer user_data)
 			 "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data (self->plugin, &device);
 
+#ifdef _WIN32
+	g_test_skip ("No offline update support on Windows");
+	return;
+#endif
 	/* schedule an offline update */
 	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (_plugin_status_changed_cb),
