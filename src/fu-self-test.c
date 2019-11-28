@@ -420,7 +420,9 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 		"    <firmware compare=\"ge\" version=\"1.2.3\"/>"
 		"    <firmware compare=\"eq\" version=\"4.5.6\">bootloader</firmware>"
 		"    <firmware compare=\"eq\" version=\"FFFF\">vendor-id</firmware>"
+#ifndef _WIN32
 		"    <id compare=\"ge\" version=\"4.0.0\">org.kernel</id>"
+#endif
 		"  </requires>"
 		"  <provides>"
 		"    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
