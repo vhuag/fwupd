@@ -10,6 +10,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-synaptics-rmi-firmware.h"
 #include "fu-synaptics-rmi-v7-device.h"
 
 #define RMI_F34_ERASE_WAIT_MS 10000 /* ms */
@@ -22,6 +23,7 @@ typedef enum {
 	RMI_FLASH_CMD_ERASE,
 	RMI_FLASH_CMD_ERASE_AP,
 	RMI_FLASH_CMD_SENSOR_ID,
+	RMI_FLASH_CMD_SIGNATURE
 } RmiFlashCommand;
 
 typedef enum {
@@ -38,6 +40,7 @@ typedef enum {
 	RMI_PARTITION_ID_DISPLAY_CONFIG,
 	RMI_PARTITION_ID_EXTERNAL_TOUCH_AFE_CONFIG,
 	RMI_PARTITION_ID_UTILITY_PARAMETER,
+	RMI_PARTITION_ID_FIXED_LOCATION_DATA = 0x0E,
 } RmiPartitionId;
 
 static const gchar *
@@ -117,32 +120,25 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError
 }
 
 static gboolean
-fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
+fu_synaptics_rmi_v7_device_erase_partition(FuSynapticsRmiDevice *self,
+					   guint8 partition_id,
+					   GError **error)
 {
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	g_autoptr(GByteArray) erase_cmd = g_byte_array_new();
-
 	/* f34 */
 	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
 	if (f34 == NULL)
 		return FALSE;
-
-	fu_byte_array_append_uint8(erase_cmd, RMI_PARTITION_ID_CORE_CODE);
+	fu_byte_array_append_uint8(erase_cmd, partition_id);
 	fu_byte_array_append_uint32(erase_cmd, 0x0, G_LITTLE_ENDIAN);
-	if (flash->bootloader_id[1] == 8) {
-		/* For bootloader v8 */
-		fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE_AP);
-	} else {
-		/* For bootloader v7 */
-		fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE);
-	}
+	fu_byte_array_append_uint8(erase_cmd, RMI_FLASH_CMD_ERASE);
+
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[0]);
 	fu_byte_array_append_uint8(erase_cmd, flash->bootloader_id[1]);
-	/* for BL8 device, we need hold 1 seconds after querying F34 status to
-	 * avoid not get attention by following giving erase command */
-	if (flash->bootloader_id[1] == 8)
-		g_usleep(1000 * 1000);
+
+	g_usleep(1000 * 1000);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base + 1,
 					   erase_cmd,
@@ -152,51 +148,58 @@ fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
 		return FALSE;
 	}
 	g_usleep(1000 * 100);
-	if (flash->bootloader_id[1] == 8) {
-		/* wait for ATTN */
-		if (!fu_synaptics_rmi_device_wait_for_idle(self,
-							   RMI_F34_ERASE_WAIT_MS,
-							   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
-							   error)) {
-			g_prefix_error(error, "failed to wait for idle: ");
-			return FALSE;
-		}
+
+	/* wait for ATTN */
+	if (!fu_synaptics_rmi_device_wait_for_idle(self,
+						   RMI_F34_ERASE_WAIT_MS,
+						   RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE,
+						   error)) {
+		g_prefix_error(error, "failed to wait for idle: ");
+		return FALSE;
 	}
+
 	if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
 		g_prefix_error(error, "failed to get flash success: ");
 		return FALSE;
 	}
+	return TRUE;
+}
 
-	/* for BL7, we need erase config partition */
-	if (flash->bootloader_id[1] == 7) {
-		g_autoptr(GByteArray) erase_config_cmd = g_byte_array_new();
+static gboolean
+fu_synaptics_rmi_v7_device_erase_all(FuSynapticsRmiDevice *self, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	FuSynapticsRmiFunction *f34;
+	g_autoptr(GByteArray) erase_cmd = g_byte_array_new();
 
-		fu_byte_array_append_uint8(erase_config_cmd, RMI_PARTITION_ID_CORE_CONFIG);
-		fu_byte_array_append_uint32(erase_config_cmd, 0x0, G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint8(erase_config_cmd, RMI_FLASH_CMD_ERASE);
+	/* f34 */
+	f34 = fu_synaptics_rmi_device_get_function(self, 0x34, error);
+	if (f34 == NULL)
+		return FALSE;
 
-		g_usleep(1000 * 100);
-		if (!fu_synaptics_rmi_device_write(self,
-						   f34->data_base + 1,
-						   erase_config_cmd,
-						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
-						   error)) {
-			g_prefix_error(error, "failed to erase core config: ");
+	if (!fu_synaptics_rmi_v7_device_erase_partition(self,
+							RMI_PARTITION_ID_FLASH_CONFIG,
+							&error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
+	}
 
-		/* wait for ATTN */
-		g_usleep(1000 * 100);
-		if (!fu_synaptics_rmi_device_wait_for_idle(
-			self,
-			RMI_F34_ERASE_WAIT_MS,
-			RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
-			error)) {
-			g_prefix_error(error, "failed to wait for idle: ");
+	if (!fu_synaptics_rmi_v7_device_erase_partition(self,
+							RMI_PARTITION_ID_CORE_CODE,
+							&error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
-		if (!fu_synaptics_rmi_device_poll_wait(self, error)) {
-			g_prefix_error(error, "failed to get flash success: ");
+	}
+
+	if (!fu_synaptics_rmi_v7_device_erase_partition(self,
+							RMI_PARTITION_ID_CORE_CONFIG,
+							&error_local)) {
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
 	}
@@ -252,7 +255,7 @@ fu_synaptics_rmi_v7_device_write_blocks(FuSynapticsRmiDevice *self,
 static gboolean
 fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					   RmiPartitionId partition_id,
-					   GBytes *bytes,
+					   GPtrArray *bytes,
 					   FuProgress *progress,
 					   GError **error)
 {
@@ -290,11 +293,13 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 
 	/* write partition */
 	chunks =
-	    fu_chunk_array_new_from_bytes(bytes,
+	    fu_chunk_array_new_from_bytes(g_ptr_array_index(bytes, 0),
 					  0x00, /* start addr */
 					  0x00, /* page_sz */
 					  (gsize)flash->payload_length * (gsize)flash->block_size);
+
 	fu_progress_set_id(progress, G_STRLOC);
+
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -326,8 +331,58 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 							     fu_chunk_get_data_sz(chk),
 							     error))
 			return FALSE;
-		fu_progress_step_done(progress);
 	}
+
+	/* write signature */
+	if (g_ptr_array_index(bytes, 1)) {
+		fu_byte_array_append_uint16(req_offset, 0x0, G_LITTLE_ENDIAN);
+		if (!fu_synaptics_rmi_device_write(self,
+						   f34->data_base + 0x2,
+						   req_offset,
+						   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						   error)) {
+			g_prefix_error(error, "failed to write offset: ");
+			return FALSE;
+		}
+
+		chunks = fu_chunk_array_new_from_bytes(g_ptr_array_index(bytes, 1),
+						       0x00, /* start addr */
+						       0x00, /* page_sz */
+						       (gsize)flash->payload_length *
+							   (gsize)flash->block_size);
+		for (guint i = 0; i < chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index(chunks, i);
+			g_autoptr(GByteArray) req_trans_sz = g_byte_array_new();
+			g_autoptr(GByteArray) req_cmd = g_byte_array_new();
+			fu_byte_array_append_uint16(req_trans_sz,
+						    fu_chunk_get_data_sz(chk) / flash->block_size,
+						    G_LITTLE_ENDIAN);
+			if (!fu_synaptics_rmi_device_write(self,
+							   f34->data_base + 0x3,
+							   req_trans_sz,
+							   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+							   error)) {
+				g_prefix_error(error, "failed to write transfer length: ");
+				return FALSE;
+			}
+			fu_byte_array_append_uint8(req_cmd, RMI_FLASH_CMD_SIGNATURE);
+			if (!fu_synaptics_rmi_device_write(self,
+							   f34->data_base + 0x4,
+							   req_cmd,
+							   FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+							   error)) {
+				g_prefix_error(error, "failed to flash command: ");
+				return FALSE;
+			}
+			if (!fu_synaptics_rmi_v7_device_write_blocks(self,
+								     f34->data_base + 0x5,
+								     fu_chunk_get_data(chk),
+								     fu_chunk_get_data_sz(chk),
+								     error))
+				return FALSE;
+		}
+	}
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -339,20 +394,21 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 					  GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
-	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
 	FuSynapticsRmiFunction *f34;
-	g_autoptr(GBytes) bytes_bin = NULL;
-	g_autoptr(GBytes) bytes_cfg = NULL;
-	g_autoptr(GBytes) bytes_flashcfg = NULL;
+	g_autoptr(GPtrArray) bytes_bin = NULL;
+	g_autoptr(GPtrArray) bytes_cfg = NULL;
+	g_autoptr(GPtrArray) bytes_flashcfg = NULL;
+	g_autoptr(GPtrArray) bytes_fld = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1, "disable-sleep");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10, NULL);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "flash-config");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-code");
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20, "core-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0, "disable-sleep");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 0 "fixed-data");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 34, NULL);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "flash-config");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 64, "core-code");
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1, "core-config");
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -368,22 +424,26 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	if (f34 == NULL)
 		return FALSE;
 
-	/* get both images */
-	bytes_bin = fu_firmware_get_image_by_id_bytes(firmware, "ui", error);
-	if (bytes_bin == NULL)
-		return FALSE;
-	bytes_cfg = fu_firmware_get_image_by_id_bytes(firmware, "config", error);
-	if (bytes_cfg == NULL)
-		return FALSE;
-	if (flash->bootloader_id[1] == 8) {
-		bytes_flashcfg = fu_firmware_get_image_by_id_bytes(firmware, "flash-config", error);
-		if (bytes_flashcfg == NULL)
-			return FALSE;
-	}
+	bytes_bin = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "ui");
+	bytes_cfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "config");
+	bytes_flashcfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "flash-config");
+	bytes_fld = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "fld");
 
 	/* disable powersaving */
 	if (!fu_synaptics_rmi_device_disable_sleep(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write fld before erase */
+	if (g_ptr_array_index(bytes_fld, 0) != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(
+			self,
+			RMI_PARTITION_ID_FIXED_LOCATION_DATA,
+			bytes_fld,
+			fu_progress_get_child(progress),
+			error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* erase all */
@@ -394,7 +454,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write flash config for v8 */
-	if (bytes_flashcfg != NULL) {
+	if (g_ptr_array_index(bytes_flashcfg, 0) != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(self,
 								RMI_PARTITION_ID_FLASH_CONFIG,
 								bytes_flashcfg,
@@ -405,21 +465,25 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write core code */
-	if (!fu_synaptics_rmi_v7_device_write_partition(self,
-							RMI_PARTITION_ID_CORE_CODE,
-							bytes_bin,
-							fu_progress_get_child(progress),
-							error))
-		return FALSE;
+	if (g_ptr_array_index(bytes_bin, 0) != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								RMI_PARTITION_ID_CORE_CODE,
+								bytes_bin,
+								fu_progress_get_child(progress),
+								error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* write core config */
-	if (!fu_synaptics_rmi_v7_device_write_partition(self,
-							RMI_PARTITION_ID_CORE_CONFIG,
-							bytes_cfg,
-							fu_progress_get_child(progress),
-							error))
-		return FALSE;
+	if (g_ptr_array_index(bytes_cfg, 0) != NULL) {
+		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								RMI_PARTITION_ID_CORE_CONFIG,
+								bytes_cfg,
+								fu_progress_get_child(progress),
+								error))
+			return FALSE;
+	}
 	fu_progress_step_done(progress);
 
 	/* success */
