@@ -705,7 +705,7 @@ fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **err
 		return FALSE;
 	f34_data = fu_synaptics_rmi_device_read(self, f34->data_base, 0x1, error);
 	if (f34_data == NULL) {
-		g_prefix_error(error, "failed to read the f01 data base: ");
+		g_prefix_error(error, "failed to read the f34 data base: ");
 		return FALSE;
 	}
 	status = f34_data->data[0];

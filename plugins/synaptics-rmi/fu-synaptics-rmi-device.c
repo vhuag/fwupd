@@ -27,8 +27,19 @@
 #define RMI_DEVICE_F01_QRY1_HAS_PROPS_2	  (1 << 7)
 
 #define RMI_DEVICE_F01_QRY42_DS4_QUERIES   (1 << 0)
+#define RMI_DEVICE_F01_QRY42_HAS_QUERY55   (1 << 7)
 #define RMI_DEVICE_F01_QRY43_01_PACKAGE_ID (1 << 0)
 #define RMI_DEVICE_F01_QRY43_01_BUILD_ID   (1 << 1)
+#define RMI_DEVICE_F01_QRY55_HAS_QUERY56   (1 << 3)
+#define RMI_DEVICE_F01_QRY55_HAS_QUERY57   (1 << 7)
+#define RMI_DEVICE_F01_QRY57_HAS_QUERY58   (1 << 7)
+#define RMI_DEVICE_F01_QRY57_HAS_QUERY59   (1 << 6)
+#define RMI_DEVICE_F01_QRY59_HAS_QUERY60   (1 << 1)
+#define RMI_DEVICE_F01_QRY59_HAS_QUERY61   (1 << 2)
+
+
+
+
 
 #define RMI_F34_COMMAND_MASK 0x0f
 #define RMI_F34_STATUS_MASK  0x07
@@ -382,7 +393,17 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GByteArray) f01_basic = NULL;
 	g_autoptr(GByteArray) f01_product_id = NULL;
 	g_autoptr(GByteArray) f01_ds4 = NULL;
-
+  gboolean has_query55 = FALSE;
+  gboolean has_query56 = FALSE;
+  gboolean has_query57 = FALSE;
+  gboolean has_query58 = FALSE;
+  gboolean has_query59 = FALSE;
+  gboolean has_query60 = FALSE;
+  gboolean has_query61 = FALSE;
+  gboolean has_query62 = FALSE;
+  gboolean has_query63 = FALSE;
+  gboolean has_query64 = FALSE;
+  
 	/* assume reset */
 	priv->in_iep_mode = FALSE;
 
@@ -459,7 +480,9 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to read query 42: ");
 			return FALSE;
 		}
+    g_debug("Q42= 0x%x\n", f01_tmp->data[0]);
 		has_dds4_queries = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_DS4_QUERIES) > 0;
+    has_query55 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY42_HAS_QUERY55) > 0;
 	}
 	if (has_dds4_queries) {
 		g_autoptr(GByteArray) f01_tmp = NULL;
@@ -477,7 +500,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 	}
 	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
 	has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
-	addr += ds4_query_length;
+	addr += ds4_query_length - 1;
 	if (has_package_id_query)
 		prod_info_addr++;
 	if (has_build_id_query) {
@@ -505,6 +528,65 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 					    error))
 			return FALSE;
 	}
+
+  if(has_query55)
+  {
+    g_autoptr(GByteArray) f01_tmp = NULL;
+    f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
+    if (f01_tmp == NULL) {
+  		g_prefix_error(error, "failed to read F01 Query55: ");
+  		return FALSE;
+	  }
+    has_query56 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY55_HAS_QUERY56) > 0;
+    has_query57 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY55_HAS_QUERY57) > 0;
+    if(has_query56)
+      addr++;
+    if(has_query57)
+    {
+      g_autoptr(GByteArray) f01_tmp = NULL;
+      f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
+      if (f01_tmp == NULL) {
+    		g_prefix_error(error, "failed to read F01 Query55: ");
+    		return FALSE;
+  	  }
+      has_query58 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY57_HAS_QUERY58) > 0;
+      has_query59 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY57_HAS_QUERY59) > 0;
+      if(has_query58)
+        addr++;
+      if(has_query59)
+      {
+        g_autoptr(GByteArray) f01_tmp = NULL;
+        f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
+        if (f01_tmp == NULL) {
+          g_prefix_error(error, "failed to read F01 Query55: ");
+          return FALSE;
+        }
+        has_query60 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY59_HAS_QUERY60) > 0;
+        if(has_query60)
+          addr++;
+        has_query61 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY59_HAS_QUERY61) > 0;
+        if(has_query61)
+        {
+          g_autoptr(GByteArray) f01_tmp = NULL;
+          addr+=2;
+          f01_tmp = fu_synaptics_rmi_device_read(self, addr, 1, error); //query 62
+          if (f01_tmp == NULL) {
+            g_prefix_error(error, "failed to read F01 Query55: ");
+            return FALSE;
+          }
+          g_debug("secure mode = 0x%x \n", f01_tmp->data[0]);
+          addr+=2;
+          f01_tmp = fu_synaptics_rmi_device_read(self, addr, 1, error); //query 64
+          if (f01_tmp == NULL) {
+            g_prefix_error(error, "failed to read F01 Query55: ");
+            return FALSE;
+          }
+          g_debug("key selection = 0x%x \n", f01_tmp->data[0]);
+        }
+        
+      }
+    }
+  }
 
 	/* read build ID, typically only for PS/2 */
 	if (!fu_synaptics_rmi_device_query_build_id(self, &priv->flash.build_id, error)) {
