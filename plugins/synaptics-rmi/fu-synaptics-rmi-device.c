@@ -140,6 +140,7 @@ GByteArray *
 fu_synaptics_rmi_device_read(FuSynapticsRmiDevice *self, guint16 addr, gsize req_sz, GError **error)
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS(self);
+  g_debug("read addr 0x%x\n", addr);
 	return klass_rmi->read(self, addr, req_sz, error);
 }
 
@@ -537,6 +538,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
   		g_prefix_error(error, "failed to read F01 Query55: ");
   		return FALSE;
 	  }
+    g_debug("Q55= 0x%x\n", f01_tmp->data[0]);
     has_query56 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY55_HAS_QUERY56) > 0;
     has_query57 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY55_HAS_QUERY57) > 0;
     if(has_query56)
@@ -546,9 +548,10 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
       g_autoptr(GByteArray) f01_tmp = NULL;
       f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
       if (f01_tmp == NULL) {
-    		g_prefix_error(error, "failed to read F01 Query55: ");
+    		g_prefix_error(error, "failed to read F01 Query57: ");
     		return FALSE;
   	  }
+      g_debug("Q57= 0x%x\n", f01_tmp->data[0]);
       has_query58 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY57_HAS_QUERY58) > 0;
       has_query59 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY57_HAS_QUERY59) > 0;
       if(has_query58)
@@ -558,7 +561,7 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
         g_autoptr(GByteArray) f01_tmp = NULL;
         f01_tmp = fu_synaptics_rmi_device_read(self, addr++, 1, error);
         if (f01_tmp == NULL) {
-          g_prefix_error(error, "failed to read F01 Query55: ");
+          g_prefix_error(error, "failed to read F01 Query59: ");
           return FALSE;
         }
         has_query60 = (f01_tmp->data[0] & RMI_DEVICE_F01_QRY59_HAS_QUERY60) > 0;
