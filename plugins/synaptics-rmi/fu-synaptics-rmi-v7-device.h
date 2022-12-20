@@ -20,3 +20,6 @@ gboolean
 fu_synaptics_rmi_v7_device_setup(FuSynapticsRmiDevice *self, GError **error);
 gboolean
 fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **error);
+GBytes*
+fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self);
+
