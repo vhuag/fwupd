@@ -495,19 +495,19 @@ fu_synaptics_rmi_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		ds4_query_length = f01_tmp->data[0];
+		f01_ds4 = fu_synaptics_rmi_device_read(self, addr, ds4_query_length, error);
+		if (f01_ds4 == NULL) {
+			g_prefix_error(error, "failed to read F01 Query43: ");
+			return FALSE;
+		}
+		has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
+		has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
+		addr += ds4_query_length;
+		if(ds4_query_length >=3)
+		{
+			has_query5253 = (f01_ds4->data[2] & RMI_DEVICE_F01_QRY43_03_HAS_QUERY5253) > 0;
+		}
 	}
-	f01_ds4 = fu_synaptics_rmi_device_read(self, addr, ds4_query_length, error);
-	if (f01_ds4 == NULL) {
-		g_prefix_error(error, "failed to read F01 Query43: ");
-		return FALSE;
-	}
-	has_package_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_PACKAGE_ID) > 0;
-	has_build_id_query = (f01_ds4->data[0] & RMI_DEVICE_F01_QRY43_01_BUILD_ID) > 0;
-  addr += ds4_query_length;
-  if(ds4_query_length >=3)
-  {
-    has_query5253 = (f01_ds4->data[2] & RMI_DEVICE_F01_QRY43_03_HAS_QUERY5253) > 0;
-  }
   addr += 3; //44 45 46
   if(has_query5253)
 	  addr += 2;
