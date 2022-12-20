@@ -436,7 +436,11 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 		return FALSE;
 	fu_progress_step_done(progress);
 
-  pubkey=fu_synaptics_rmi_v7_device_get_pubkey(self);
+  pubkey = fu_synaptics_rmi_v7_device_get_pubkey(self);
+  g_debug(" %d %d %d \n",
+    g_bytes_get_size(g_ptr_array_index(bytes_fld, 0)),
+    g_bytes_get_size(pubkey),
+    g_bytes_get_size(g_ptr_array_index(bytes_fld, 1)));
   
   verify_result = fu_synaptics_verify_sha256_signature(g_ptr_array_index(bytes_fld, 0), pubkey, g_ptr_array_index(bytes_fld, 1), error);
   
