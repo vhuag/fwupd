@@ -40,8 +40,8 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 				     GBytes *signature,
 				     GError **error);
 
-
-const gchar * pszEngineerRSAPublicKey3k = "\
+#if 0
+const gchar pszEngineerRSAPublicKey3k[] = "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAyhaj18TgLfCgYd6yXWi4\n\
 2kHUYtsbqL4fveMp8+hMLExuqiKU11pBoGgVNqkCQ9RXnc5wolMDKYvItDvPSNJj\n\
@@ -56,7 +56,7 @@ wpsloqbdBKIXQC7gTUUpEerWXn4HDtVRm3qAz3A/bXKRAgMBAAE=\n\
 ";
 
 
-const gchar * pszEngineerRSAPublicKey2k = "\
+const gchar pszEngineerRSAPublicKey2k[] = "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAony7196aeitgE0SU5NPz\n\
 fro6XeKR7Z3yB4WAQ+YlXXLz/qZ0KmbaTHhb36aiBUWg2Z6emGztBC/fTJQ8WTz6\n\
@@ -68,7 +68,7 @@ PJMika7Ndyh6HZAoAgD1bLnqbi38WK4Z7LEZZ2LF/BZZuQOp+SzFHDJlV1mIQzNb\n\
 -----END PUBLIC KEY-----\
 ";
 
-const gchar* pszProductionKey[4] = {
+const char pszProductionKey2[][] = {
 "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAum0B1Y+kTcuIakI4OkRE\n\
@@ -124,3 +124,4 @@ SCOCJ7suL9kutd5nmFriYDWCemRnPUOTEShjN2xqf6ktAgMBAAE=\n\
 };
              
 
+#endif
