@@ -438,11 +438,11 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 
   pubkey = fu_synaptics_rmi_v7_device_get_pubkey(self);
   g_debug(" %d %d %d \n",
-    g_bytes_get_size(g_ptr_array_index(bytes_fld, 0)),
+    g_bytes_get_size(g_ptr_array_index(bytes_flashcfg, 0)),
     g_bytes_get_size(pubkey),
-    g_bytes_get_size(g_ptr_array_index(bytes_fld, 1)));
+    g_bytes_get_size(g_ptr_array_index(bytes_flashcfg, 1)));
   
-  verify_result = fu_synaptics_verify_sha256_signature(g_ptr_array_index(bytes_fld, 0), pubkey, g_ptr_array_index(bytes_fld, 1), error);
+  verify_result = fu_synaptics_verify_sha256_signature(g_ptr_array_index(bytes_flashcfg, 0), pubkey, g_ptr_array_index(bytes_flashcfg, 1), error);
   
   g_debug("verify result=%d \n", verify_result);
 	/* write fld before erase */
@@ -798,7 +798,7 @@ fu_synaptics_rmi_v7_device_query_status(FuSynapticsRmiDevice *self, GError **err
 	return TRUE;
 }
 
-const gchar pszEngineerRSAPublicKey3k[] = "\
+const gchar *pszEngineerRSAPublicKey3k = "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAyhaj18TgLfCgYd6yXWi4\n\
 2kHUYtsbqL4fveMp8+hMLExuqiKU11pBoGgVNqkCQ9RXnc5wolMDKYvItDvPSNJj\n\
@@ -813,7 +813,7 @@ wpsloqbdBKIXQC7gTUUpEerWXn4HDtVRm3qAz3A/bXKRAgMBAAE=\n\
 ";
 
 
-const gchar pszEngineerRSAPublicKey2k[] = "\
+const char pszEngineerRSAPublicKey2k[] = "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAony7196aeitgE0SU5NPz\n\
 fro6XeKR7Z3yB4WAQ+YlXXLz/qZ0KmbaTHhb36aiBUWg2Z6emGztBC/fTJQ8WTz6\n\
@@ -825,7 +825,7 @@ PJMika7Ndyh6HZAoAgD1bLnqbi38WK4Z7LEZZ2LF/BZZuQOp+SzFHDJlV1mIQzNb\n\
 -----END PUBLIC KEY-----\
 ";
 
-const char pszProductionKey[][] = {
+const gchar **pszProductionKey = {
 "\
 -----BEGIN PUBLIC KEY-----\n\
 MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAum0B1Y+kTcuIakI4OkRE\n\
