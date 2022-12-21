@@ -926,7 +926,7 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self)
 
   for(uint i =0;i<sizeof(test_pubkey);i++)
   {
-    g_byte_array_append (gbarray, (guint8*) test_pubkey[i], 4);
+    g_byte_array_append (gtemp, (guint8*) test_pubkey[i], 4);
     //gtemp->data[4*i] = test_pubkey[i]>>24;
     //gtemp->data[4*i+1] = (test_pubkey[i]>>16) & 0xff;
    // gtemp->data[4*i+2] = (test_pubkey[i]>>8) & 0xff;
