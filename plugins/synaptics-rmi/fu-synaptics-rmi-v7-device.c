@@ -880,7 +880,7 @@ SCOCJ7suL9kutd5nmFriYDWCemRnPUOTEShjN2xqf6ktAgMBAAE=\n\
 "
 };
 
-const unsigned int test_pubkey[]=
+const uint32_t test_pubkey[]=
 {
   0x43335beb, 0x65575988, 0x2cc51c32, 0xb903a9f9,
   0xc5fc1659, 0xb1196762, 0x58ae19ec, 0xea6e2dfc,
@@ -926,7 +926,8 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self)
 
   for(uint i =0;i<sizeof(test_pubkey);i++)
   {
-    g_byte_array_append (gtemp, (guint8*) test_pubkey[i], 4);
+   // g_byte_array_append (gtemp, (guint8*) test_pubkey[i], 4);
+    fu_byte_array_append_uint32=(gtemp, test_pubkey[i], G_LITTLE_ENDIAN);
     //gtemp->data[4*i] = test_pubkey[i]>>24;
     //gtemp->data[4*i+1] = (test_pubkey[i]>>16) & 0xff;
    // gtemp->data[4*i+2] = (test_pubkey[i]>>8) & 0xff;
