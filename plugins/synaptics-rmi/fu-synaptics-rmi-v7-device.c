@@ -880,7 +880,7 @@ SCOCJ7suL9kutd5nmFriYDWCemRnPUOTEShjN2xqf6ktAgMBAAE=\n\
 "
 };
 
-const uint32_t test_pubkey[]=
+const unsigned int test_pubkey[]=
 {
   0x43335beb, 0x65575988, 0x2cc51c32, 0xb903a9f9,
   0xc5fc1659, 0xb1196762, 0x58ae19ec, 0xea6e2dfc,
