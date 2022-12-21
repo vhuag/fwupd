@@ -880,14 +880,61 @@ SCOCJ7suL9kutd5nmFriYDWCemRnPUOTEShjN2xqf6ktAgMBAAE=\n\
 "
 };
 
-
+const uint32_t test_pubkey[]=
+{
+  0x43335beb, 0x65575988, 0x2cc51c32, 0xb903a9f9,
+  0xc5fc1659, 0xb1196762, 0x58ae19ec, 0xea6e2dfc,
+  0x00f56cb9, 0x1d902802, 0xcd77287a, 0x932291ae,
+  0xab7c233c, 0x1ee9ffa5, 0x7ee176a1, 0xd0e08864,
+  0x6f484d1d, 0x192e05c4, 0x83006a2d, 0xcb0a39c6,
+  0xab9379da, 0xfd587742, 0xced13152, 0x3cbf94ba,
+  0x85c9eb6c, 0x089a93f9, 0x83f0904a, 0x2ca41b5f,
+  0xcd238dc5, 0xfe18ac75, 0xf73c40d6, 0x94c34b04,
+  0x4ed24d46, 0xaa154b4e, 0xffc940b8, 0xebaef3ba,
+  0x22ed5789, 0xcab1e4e4, 0x0f6e3caa, 0x9fee40ae,
+  0x59204033, 0xd674b6a4, 0x0137fb4e, 0x31ff6566,
+  0xb8dada1e, 0x3600c64e, 0xb276273c, 0xda25a76f,
+  0x593cfaf4, 0xdf4c943c, 0x6ced042f, 0xd99e9e98,
+  0xa20545a0, 0x785bdfa6, 0x2a66da4c, 0xf3fea674,
+  0xe6255d72, 0x07858043, 0x91ed9df2, 0xba3a5de2,
+  0xe4d3f37e, 0x60134494, 0xde9a7a2b, 0xa27cbbd7,//R^2 mod N
+  0x8bff47b5, 0x60651633, 0xf163d0bb, 0xb5bc18fa,
+  0xec13844c, 0xafb00505, 0x6f9f7435, 0x7d97cac9,
+  0xd81d1183, 0xe5b1b770, 0x04ae82ab, 0x25570564,
+  0xd9c613de, 0x230b93cf, 0xd186d04a, 0x1dbb536c,
+  0x15dfcc0a, 0xed2bbe6e, 0x2db02c1a, 0xa9792681,
+  0x828bcce4, 0x17495ffd, 0x1316efbc, 0x36edee03,
+  0xb2aa9759, 0xb7bb44d9, 0x5ff6d99c, 0x3f8df93a,
+  0x0e0c47e1, 0xcd6e8983, 0x62074d51, 0xbfdce212,
+  0x60ae9ca7, 0xe1e03266, 0x1de78166, 0xe93df332,
+  0xbe312970, 0x3f5293c1, 0xd96cf15a, 0xd6cb3b34,
+  0xcd4fd72d, 0x00160dde, 0x4f7b6e04, 0xd15c08d1,
+  0x1e5820f5, 0x4f5ba81b, 0xa8dd7d88, 0x8916934f,
+  0xaf4cf238, 0x1a3bd8e4, 0x6ad45a44, 0x9d608353,
+  0xa746911b, 0x62c7da7f, 0x2a457eb1, 0x1d843d5f,
+  0x64bda298, 0x6c8d307c, 0x4b8ad667, 0xb3343601,
+  0x53385a04, 0xe0597287, 0x17615ffe, 0x2c62eadd};
+  
 GBytes*
 fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self)
 {
   g_autoptr(GBytes) pubkey = NULL;
+ // g_ByteArray **gtemp=NULL;
+  g_autoptr(GByteArray) gtemp = g_byte_array_new();
   FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
   g_debug("get pubkey 0x%x 0x%x \n", flash->bootloader_id[0], flash->bootloader_id[1]);
-  pubkey = g_bytes_new(pszEngineerRSAPublicKey2k, sizeof(pszEngineerRSAPublicKey2k));
-  return g_steal_pointer(&pubkey);
+
+  for(uint i =0;i<sizeof(test_pubkey);i++)
+  {
+    g_byte_array_append (gbarray, (guint8*) test_pubkey[i], 4);
+    //gtemp->data[4*i] = test_pubkey[i]>>24;
+    //gtemp->data[4*i+1] = (test_pubkey[i]>>16) & 0xff;
+   // gtemp->data[4*i+2] = (test_pubkey[i]>>8) & 0xff;
+   // gtemp->data[4*i+3] = test_pubkey[i] & 0xff;
+   g_debug("%d: 0x%x 0x%x 0x%x 0x%x \n", i, gtemp->data[4*i], gtemp->data[4*i+1], gtemp->data[4*i+2], gtemp->data[4*i+3]);
+  }
+  return g_byte_array_free_to_bytes(g_steal_pointer(&gtemp));
+  //pubkey = g_bytes_new(pszEngineerRSAPublicKey2k, sizeof(pszEngineerRSAPublicKey2k));
+ // return g_steal_pointer(&pubkey);
 }
 
