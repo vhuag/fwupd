@@ -132,7 +132,7 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	gnutls_hash_hd_t sha2;
 	g_auto(gnutls_pubkey_t) pub = NULL;
 	gint ec;
-	guint8 exponent[] = {1, 0, 1};
+	guint8 exponent[] = {0,1, 0, 0, 0, 1};
 	guint hash_length = gnutls_hash_get_len(GNUTLS_DIG_SHA256);
 	g_autoptr(gnutls_data_t) hash_data = NULL;
 
@@ -141,7 +141,12 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	gnutls_hash_init(&sha2, GNUTLS_DIG_SHA256);
 	gnutls_hash(sha2, g_bytes_get_data(payload, NULL), g_bytes_get_size(payload));
 	gnutls_hash_deinit(sha2, hash_data);
-
+		fu_dump_full(G_LOG_DOMAIN,
+				"payload",
+				g_bytes_get_data(payload, NULL),
+				g_bytes_get_size(payload),
+				80,
+				FU_DUMP_FLAGS_NONE);
 	/* hash */
 	hash.size = hash_length;
 	hash.data = hash_data;
@@ -150,13 +155,36 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	m.size = g_bytes_get_size(pubkey);
 	m.data = (guint8 *)g_bytes_get_data(pubkey, NULL);
 
+
+	fu_dump_full(G_LOG_DOMAIN,
+				"pubkey",
+				m.data,
+				m.size,
+				40,
+				FU_DUMP_FLAGS_NONE);
+
 	/* exponent */
 	e.size = sizeof(exponent);
 	e.data = exponent;
 
+fu_dump_full(G_LOG_DOMAIN,
+				"exponent",
+				e.data,
+				e.size,
+				40,
+				FU_DUMP_FLAGS_NONE);
+
 	/* signature */
 	sig.size = g_bytes_get_size(signature);
 	sig.data = (guint8 *)g_bytes_get_data(signature, NULL);
+
+	fu_dump_full(G_LOG_DOMAIN,
+				"signature",
+				sig.data,
+				sig.size,
+				40,
+				FU_DUMP_FLAGS_NONE);
+
 
 	gnutls_pubkey_init(&pub);
 	ec = gnutls_pubkey_import_rsa_raw(pub, &m, &e);
@@ -169,6 +197,7 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 		return FALSE;
 	}
 	ec = gnutls_pubkey_verify_hash2(pub, GNUTLS_SIGN_RSA_SHA256, 0, &hash, &sig);
+	g_debug("very %d\n",ec);
 	if (ec < 0) {
 		g_set_error(error,
 			    FWUPD_ERROR,

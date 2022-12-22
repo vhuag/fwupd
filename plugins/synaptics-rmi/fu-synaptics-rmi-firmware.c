@@ -194,6 +194,24 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 		fu_firmware_set_id(img, sig_id);
 		fu_firmware_add_image(firmware, img);
 	}
+	if(strcmp(id, "flash-config")==0){
+		g_debug("dumping %s\n",id);
+		gsize sz=0;
+		const guint8 *logdata = g_bytes_get_data(bytes, &sz);
+
+		//fu_dump_full(G_LOG_DOMAIN,
+		//			"img data",
+		//			&logdata[offset],
+		//			sz,
+		//			80,
+		//			FU_DUMP_FLAGS_NONE);
+		fu_dump_full(G_LOG_DOMAIN,
+					"img data signature",
+					logdata,
+					sig_sz,
+					80,
+					FU_DUMP_FLAGS_NONE);
+	}
 	return TRUE;
 }
 
