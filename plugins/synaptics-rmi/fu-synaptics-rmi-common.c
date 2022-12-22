@@ -198,7 +198,7 @@ fu_dump_full(G_LOG_DOMAIN,
 			    gnutls_strerror(ec));
 		return FALSE;
 	}
-  p.size = g_byte_get_size(payload);
+  p.size = g_bytes_get_size(payload);
   p.data = (guint8 *)g_bytes_get_data(payload, NULL);
 
   ec2 = gnutls_pubkey_verify_hash2(pub, GNUTLS_SIGN_RSA_SHA256, 0, &p, &sig);
