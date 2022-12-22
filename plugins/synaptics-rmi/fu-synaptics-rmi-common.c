@@ -132,7 +132,7 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	gnutls_hash_hd_t sha2;
 	g_auto(gnutls_pubkey_t) pub = NULL;
 	gint ec;
-	guint8 exponent[] = {0,1, 0, 0, 0, 1};
+	guint8 exponent[] = {1, 0, 1};
 	guint hash_length = gnutls_hash_get_len(GNUTLS_DIG_SHA256);
 	g_autoptr(gnutls_data_t) hash_data = NULL;
 
@@ -141,12 +141,12 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	gnutls_hash_init(&sha2, GNUTLS_DIG_SHA256);
 	gnutls_hash(sha2, g_bytes_get_data(payload, NULL), g_bytes_get_size(payload));
 	gnutls_hash_deinit(sha2, hash_data);
-		fu_dump_full(G_LOG_DOMAIN,
-				"payload",
-				g_bytes_get_data(payload, NULL),
-				g_bytes_get_size(payload),
-				80,
-				FU_DUMP_FLAGS_NONE);
+	fu_dump_full(G_LOG_DOMAIN,
+			"payload",
+			g_bytes_get_data(payload, NULL),
+			g_bytes_get_size(payload),
+			80,
+			FU_DUMP_FLAGS_NONE);
 	/* hash */
 	hash.size = hash_length;
 	hash.data = hash_data;

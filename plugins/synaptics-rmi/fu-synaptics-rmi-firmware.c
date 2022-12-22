@@ -209,7 +209,7 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 					"img data signature",
 					logdata,
 					sig_sz,
-					80,
+					40,
 					FU_DUMP_FLAGS_NONE);
 	}
 	return TRUE;
