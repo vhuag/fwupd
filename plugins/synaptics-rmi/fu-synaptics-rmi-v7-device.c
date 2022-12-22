@@ -442,7 +442,7 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
     g_bytes_get_size(pubkey),
     g_bytes_get_size(g_ptr_array_index(bytes_flashcfg, 1)));
   
-  verify_result = fu_synaptics_verify_sha256_signature(g_ptr_array_index(bytes_flashcfg, 0), pubkey, g_ptr_array_index(bytes_flashcfg, 1), error);
+  verify_result = fu_synaptics_verify_sha256_signature(g_ptr_array_index(bytes_bin, 0), pubkey, g_ptr_array_index(bytes_bin, 1), error);
   
   g_debug("verify result=%d \n", verify_result);
 	/* write fld before erase */
@@ -589,7 +589,7 @@ fu_synaptics_rmi_device_read_flash_config_v7(FuSynapticsRmiDevice *self, GError 
 			     "FlashConfig",
 			     res->data,
 			     res->len,
-			     80,
+			     40,
 			     FU_DUMP_FLAGS_NONE);
 	}
 

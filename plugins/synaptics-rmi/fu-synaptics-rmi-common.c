@@ -141,11 +141,12 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	gnutls_hash_init(&sha2, GNUTLS_DIG_SHA256);
 	gnutls_hash(sha2, g_bytes_get_data(payload, NULL), g_bytes_get_size(payload));
 	gnutls_hash_deinit(sha2, hash_data);
+	g_debug("payload size %d \n", g_bytes_get_size(payload));
 	fu_dump_full(G_LOG_DOMAIN,
 			"payload",
 			g_bytes_get_data(payload, NULL),
 			g_bytes_get_size(payload),
-			80,
+			40,
 			FU_DUMP_FLAGS_NONE);
 	/* hash */
 	hash.size = hash_length;

@@ -180,11 +180,13 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 					GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GBytes) bytes_payload = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autofree gchar *sig_id = NULL;
 
 	if (!fu_synaptics_rmi_firmware_add_image(firmware, id, fw, offset, sz, error))
 		return FALSE;
+	/*add signature*/
 	if (sig_sz != 0) {
 		bytes = fu_bytes_new_offset(fw, offset + sz, sig_sz, error);
 		if (bytes == NULL)
@@ -195,16 +197,19 @@ fu_synaptics_rmi_firmware_add_image_v10(FuFirmware *firmware,
 		fu_firmware_add_image(firmware, img);
 	}
 	if(strcmp(id, "flash-config")==0){
-		g_debug("dumping %s\n",id);
-		gsize sz=0;
-		const guint8 *logdata = g_bytes_get_data(bytes, &sz);
-
-		//fu_dump_full(G_LOG_DOMAIN,
-		//			"img data",
-		//			&logdata[offset],
-		//			sz,
-		//			80,
-		//			FU_DUMP_FLAGS_NONE);
+		g_debug("dumping %s %d %d \n",id, sz, sig_sz);
+		gsize sz2=0;
+		const guint8 *logdata = g_bytes_get_data(bytes, &sz2);
+		g_debug("sz2=%d \n", sz2);
+		bytes_payload = fu_bytes_new_offset(fw, offset, sz, error);
+		const guint8* payload_data = g_bytes_get_data(bytes_payload, &sz2);
+		g_debug("sz2=%d \n", sz2);
+		fu_dump_full(G_LOG_DOMAIN,
+					"img data",
+					payload_data,
+					sz,
+					40,
+					FU_DUMP_FLAGS_NONE);
 		fu_dump_full(G_LOG_DOMAIN,
 					"img data signature",
 					logdata,
