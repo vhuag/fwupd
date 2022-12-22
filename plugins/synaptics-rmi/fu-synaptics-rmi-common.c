@@ -135,7 +135,8 @@ fu_synaptics_verify_sha256_signature(GBytes *payload,
 	guint8 exponent[] = {1, 0, 1};
 	guint hash_length = gnutls_hash_get_len(GNUTLS_DIG_SHA256);
 	g_autoptr(gnutls_data_t) hash_data = NULL;
-
+  gint ec2;
+  gnutls_datum_t p;
 	/* hash firmware data */
 	hash_data = gnutls_malloc(hash_length);
 	gnutls_hash_init(&sha2, GNUTLS_DIG_SHA256);
@@ -197,6 +198,12 @@ fu_dump_full(G_LOG_DOMAIN,
 			    gnutls_strerror(ec));
 		return FALSE;
 	}
+  p.size = g_byte_get_size(payload);
+  p.data = (guint8 *)g_bytes_get_data(payload, NULL);
+
+  ec2 = gnutls_pubkey_verify_hash2(pub, GNUTLS_SIGN_RSA_SHA256, 0, &p, &sig);
+  g_debug("very2 %d\n",ec2);
+  
 	ec = gnutls_pubkey_verify_hash2(pub, GNUTLS_SIGN_RSA_SHA256, 0, &hash, &sig);
 	g_debug("very %d\n",ec);
 	if (ec < 0) {
