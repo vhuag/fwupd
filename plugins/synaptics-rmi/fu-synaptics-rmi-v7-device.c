@@ -895,23 +895,7 @@ const unsigned int test_pubkey[]=
   0x593cfaf4, 0xdf4c943c, 0x6ced042f, 0xd99e9e98,
   0xa20545a0, 0x785bdfa6, 0x2a66da4c, 0xf3fea674,
   0xe6255d72, 0x07858043, 0x91ed9df2, 0xba3a5de2,
-  0xe4d3f37e, 0x60134494, 0xde9a7a2b, 0xa27cbbd7,//R^2 mod N
-  0x8bff47b5, 0x60651633, 0xf163d0bb, 0xb5bc18fa,
-  0xec13844c, 0xafb00505, 0x6f9f7435, 0x7d97cac9,
-  0xd81d1183, 0xe5b1b770, 0x04ae82ab, 0x25570564,
-  0xd9c613de, 0x230b93cf, 0xd186d04a, 0x1dbb536c,
-  0x15dfcc0a, 0xed2bbe6e, 0x2db02c1a, 0xa9792681,
-  0x828bcce4, 0x17495ffd, 0x1316efbc, 0x36edee03,
-  0xb2aa9759, 0xb7bb44d9, 0x5ff6d99c, 0x3f8df93a,
-  0x0e0c47e1, 0xcd6e8983, 0x62074d51, 0xbfdce212,
-  0x60ae9ca7, 0xe1e03266, 0x1de78166, 0xe93df332,
-  0xbe312970, 0x3f5293c1, 0xd96cf15a, 0xd6cb3b34,
-  0xcd4fd72d, 0x00160dde, 0x4f7b6e04, 0xd15c08d1,
-  0x1e5820f5, 0x4f5ba81b, 0xa8dd7d88, 0x8916934f,
-  0xaf4cf238, 0x1a3bd8e4, 0x6ad45a44, 0x9d608353,
-  0xa746911b, 0x62c7da7f, 0x2a457eb1, 0x1d843d5f,
-  0x64bda298, 0x6c8d307c, 0x4b8ad667, 0xb3343601,
-  0x53385a04, 0xe0597287, 0x17615ffe, 0x2c62eadd,
+  0xe4d3f37e, 0x60134494, 0xde9a7a2b, 0xa27cbbd7
  };
   
 GBytes*
@@ -925,18 +909,16 @@ fu_synaptics_rmi_v7_device_get_pubkey(FuSynapticsRmiDevice *self)
 
   for(uint i =0;i<sizeof(test_pubkey)/sizeof(test_pubkey[0]);i++)
   {
-    fu_byte_array_append_uint32(gtemp, test_pubkey[i], G_LITTLE_ENDIAN);
+    fu_byte_array_append_uint32(gtemp, test_pubkey[sizeof(test_pubkey)/sizeof(test_pubkey[0]) -i -1], G_BIG_ENDIAN);
   }
   fu_dump_full(G_LOG_DOMAIN,
 				"key_extract",
 				gtemp->data,
-				sizeof(test_pubkey)/sizeof(test_pubkey[0]),
+				gtemp->len,
 				40,
 				FU_DUMP_FLAGS_NONE);
 	g_debug("size %d %d\n",sizeof(test_pubkey), gtemp->len);
 
   return g_byte_array_free_to_bytes(g_steal_pointer(&gtemp));
-  //pubkey = g_bytes_new(pszEngineerRSAPublicKey2k, sizeof(pszEngineerRSAPublicKey2k));
- // return g_steal_pointer(&pubkey);
 }
 
