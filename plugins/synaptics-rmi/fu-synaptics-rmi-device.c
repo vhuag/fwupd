@@ -622,14 +622,20 @@ fu_synaptics_rmi_device_poll(FuSynapticsRmiDevice *self, GError **error)
 		return FALSE;
 	}
 	if ((f34_db->data[0] & 0x1f) != 0x0) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "flash status invalid: 0x%x",
-			    (guint)(f34_db->data[0] & 0x1f));
+		if ((f34_db->data[0] & 0x1f) == 0x6) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "unknown erase or program, expected during erase");
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "flash status invalid: 0x%x",
+				    (guint)(f34_db->data[0] & 0x1f));
+		}
 		return FALSE;
 	}
-
 	/* success */
 	return TRUE;
 }
