@@ -418,12 +418,24 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	if (f34 == NULL)
 		return FALSE;
 
-	array_bin = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "ui");
-	array_cfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "config");
-	array_flashcfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "flash-config");
-	array_fld = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "fld");
-	array_afe = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "afe");
-	array_displaycfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "display-config");
+	array_bin = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "ui", error);
+	if(array_bin == NULL)
+		return FALSE;
+	array_cfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "config", error);
+	if(array_cfg == NULL)
+		return FALSE;
+	array_flashcfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "flash-config", error);
+	if(array_flashcfg == NULL)
+		return FALSE;
+	array_fld = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "fld", error);
+	if(array_fld == NULL)
+		return FALSE;
+	array_afe = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "afe", error);
+	if(array_afe == NULL)
+		return FALSE;
+	array_displaycfg = fu_synaptics_rmi_firmware_get_image_by_id(firmware, "display-config", error);
+	if(array_displaycfg == NULL)
+		return FALSE;
 
 	if (!fu_synaptics_rmi_v7_device_secure_check(self, firmware, error))
 		return FALSE;

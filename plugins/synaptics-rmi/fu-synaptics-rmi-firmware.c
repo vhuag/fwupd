@@ -641,14 +641,13 @@ fu_synaptics_rmi_firmware_get_sig_size(FuSynapticsRmiFirmware *self)
 }
 
 GPtrArray *
-fu_synaptics_rmi_firmware_get_image_by_id(FuFirmware *firmware, const gchar *id)
+fu_synaptics_rmi_firmware_get_image_by_id(FuFirmware *firmware, const gchar *id, GError **error)
 {
 	g_autoptr(GPtrArray) imgs = g_ptr_array_new();
 	g_autoptr(GBytes) img = NULL;
 	g_autoptr(GBytes) img_sig = NULL;
-	g_autoptr(GError) error_local = NULL;
 
-	img = fu_firmware_get_image_by_id_bytes(firmware, id, &error_local);
+	img = fu_firmware_get_image_by_id_bytes(firmware, id, error);
 	g_ptr_array_add(imgs, img);
 	img_sig = fu_firmware_get_image_by_id_bytes(firmware,
 						    g_strdup_printf("%s-signature", id),
