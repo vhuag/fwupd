@@ -69,8 +69,6 @@ fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
-	g_info("vincent read %d bytes from 0x%04x", req_sz, addr);
-
 	/* maximum size */
 	if (req_sz > 0xffff) {
 		g_set_error_literal(error,
@@ -214,7 +212,7 @@ fu_synaptics_rmi_hid_device_write(FuSynapticsRmiDevice *rmi_device,
 	for (guint i = buf->len; i < 21; i++)
 		fu_byte_array_append_uint8(buf, 0x0);
 	fu_dump_full(G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len, 80, FU_DUMP_FLAGS_NONE);
-	g_info("vincent write %d bytes to 0x%04x", len, addr);
+
 	return fu_io_channel_write_byte_array(io_channel,
 					      buf,
 					      RMI_DEVICE_DEFAULT_TIMEOUT,

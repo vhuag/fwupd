@@ -1071,6 +1071,7 @@ fu_udev_device_open(FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE(device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_info("vincent fu_udev_device_open %s", fu_device_get_id(device));
 
 	/* emulated */
 	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_EMULATED))
@@ -1092,6 +1093,9 @@ fu_udev_device_open(FuDevice *device, GError **error)
 	/* open device */
 	if (priv->device_file != NULL) {
 		g_autoptr(FuIOChannel) io_channel = NULL;
+		g_info("opening device file %s with flags 0x%x",
+		       priv->device_file,
+		       priv->open_flags);
 		io_channel = fu_io_channel_new_file(priv->device_file, priv->open_flags, error);
 		if (io_channel == NULL)
 			return FALSE;

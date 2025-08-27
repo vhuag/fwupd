@@ -356,7 +356,7 @@ fu_hidraw_device_get_feature(FuHidrawDevice *self,
 static void
 fu_hidraw_device_init(FuHidrawDevice *self)
 {
-	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
+	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ|FU_IO_CHANNEL_OPEN_FLAG_WRITE);
 }
 
 static void

@@ -102,6 +102,7 @@ gboolean
 fu_synaptics_rmi_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
 	g_autoptr(FuIOChannel) io = NULL;
+	g_info("vincent new file in %s", fn);
 	io = fu_io_channel_new_file(fn, FU_IO_CHANNEL_OPEN_FLAG_WRITE, error);
 	if (io == NULL)
 		return FALSE;
