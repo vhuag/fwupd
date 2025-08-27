@@ -1,9 +1,8 @@
 # Dell K12A kbd-dock
-[HIDRAW\VEN_06CB&DEV_2819]
+[HIDRAW\VEN_06CB&DEV_CE57]
 Plugin = synaptics_rmi
 GType = FuSynapticsRmiHidDevice
 Vendor = Synaptics
-Flags = only-supported
 
 # LENOVO X1 Nano
 [SERIO\FWID_LEN0305-PNP0F13]

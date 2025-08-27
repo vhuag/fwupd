@@ -1729,6 +1729,7 @@ fu_plugin_backend_device_added(FuPlugin *self,
 
 	/* there are a lot of different devices that match, but not all respond
 	 * well to opening -- so limit some ones with issued updates */
+	
 	if (fu_device_has_private_flag(dev, FU_DEVICE_PRIVATE_FLAG_ONLY_SUPPORTED)) {
 		if (!fu_device_probe(dev, error))
 			return FALSE;

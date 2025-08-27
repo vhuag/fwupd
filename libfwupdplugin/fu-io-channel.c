@@ -646,6 +646,12 @@ fu_io_channel_new_file(const gchar *filename, FuIoChannelOpenFlags open_flags, G
 	if (open_flags & FU_IO_CHANNEL_OPEN_FLAG_SYNC)
 		flags |= O_SYNC;
 #endif
+	// if filename is xxx/hidraw*, set flags to O_RDWR
+	if (g_str_has_prefix(g_basename(filename), "hidraw"))
+	{
+		flags = O_RDWR;
+		g_info("set %s to O_RDWR", filename);
+	}
 	fd = g_open(filename, flags, S_IRWXU);
 	if (fd < 0) {
 		g_set_error(error,

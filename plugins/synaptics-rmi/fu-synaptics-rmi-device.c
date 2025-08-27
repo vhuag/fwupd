@@ -238,6 +238,15 @@ fu_synaptics_rmi_device_scan_pdt(FuSynapticsRmiDevice *self, GError **error)
 					       addr);
 				return FALSE;
 			}
+			//print res via g_info
+			g_info("PDT Entry @ 0x%04x: %02x %02x %02x %02x %02x %02x",
+			       addr,
+			       res->data[0],
+			       res->data[1],
+			       res->data[2],
+			       res->data[3],
+			       res->data[4],
+			       res->data[5]);
 			func = fu_synaptics_rmi_function_parse(res,
 							       page_start,
 							       interrupt_count,
