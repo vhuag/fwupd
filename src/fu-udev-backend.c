@@ -652,7 +652,8 @@ fu_udev_backend_netlink_cb(gint fd, GIOCondition condition, gpointer user_data)
 		return TRUE;
 
 	/* only accept messages from kernel (pid 0) to prevent spoofing attacks */
-	if (sender_addr.nl_pid != 0) {
+	if (sender_addr.nl_groups == FU_UDEV_MONITOR_NETLINK_GROUP_KERNEL &&
+	    sender_addr.nl_pid != 0) {
 		g_warning("rejecting netlink message from non-kernel sender (pid %u)",
 			  sender_addr.nl_pid);
 		return TRUE;
