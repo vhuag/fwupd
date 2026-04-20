@@ -6,20 +6,21 @@
 # Cheng-Chia Tseng <pswo10680@gmail.com>, 2017-2018,2024
 # Richard Hughes <hughsient@gmail.com>, 2025.
 # EESF-2 <eesf-2@users.noreply.hosted.weblate.org>, 2026.
+# UDP <udp@users.noreply.hosted.weblate.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-14 13:50+0100\n"
-"PO-Revision-Date: 2026-03-27 00:09+0000\n"
-"Last-Translator: EESF-2 <eesf-2@users.noreply.hosted.weblate.org>\n"
+"PO-Revision-Date: 2026-04-20 23:09+0000\n"
+"Last-Translator: UDP <udp@users.noreply.hosted.weblate.org>\n"
 "Language-Team: Chinese (Traditional Han script) <https://hosted.weblate.org/projects/fwupd/fwupd/zh_Hant/>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 5.17-dev\n"
+"X-Generator: Weblate 5.17.1-dev\n"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
 msgstr "Linux 廠商韌體服務（穩定版韌體）"
@@ -3014,7 +3015,7 @@ msgstr "最小版本"
 
 #. TRANSLATORS: largest version number installable on device
 msgid "Maximum Version"
-msgstr ""
+msgstr "最大版本"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -3026,7 +3027,7 @@ msgstr "供應商"
 
 #. TRANSLATORS: webpage for the specific device
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #. TRANSLATORS: the stream of firmware, e.g. nonfree
 msgid "Release Branch"
