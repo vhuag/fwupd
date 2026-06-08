@@ -35,6 +35,15 @@ This plugin supports the following protocol ID:
 
 * `com.synaptics.rmi`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### Flags=update-needs-reboot
+
+Rebind the driver without waiting for replug. The new firmware is already
+running, but the reported version is only refreshed on the next reboot.
+
 ## External Interface Access
 
 This plugin requires ioctl access to `HIDIOCSFEATURE` and `HIDIOCGFEATURE`.

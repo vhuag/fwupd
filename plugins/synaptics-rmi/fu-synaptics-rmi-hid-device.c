@@ -60,6 +60,8 @@ G_DEFINE_TYPE(FuSynapticsRmiHidDevice, fu_synaptics_rmi_hid_device, FU_TYPE_SYNA
 
 #define FU_SYNAPTICS_RMI_HID_DEVICE_IOCTL_TIMEOUT 5000 /* ms */
 
+#define FU_SYNAPTICS_RMI_HID_DEVICE_FLAG_UPDATE_NEEDS_REBOOT "update-needs-reboot"
+
 static GByteArray *
 fu_synaptics_rmi_hid_device_read(FuSynapticsRmiDevice *rmi_device,
 				 guint16 addr,
@@ -351,7 +353,9 @@ fu_synaptics_rmi_hid_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **error)
+fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self,
+					  gboolean wait_for_replug,
+					  GError **error)
 {
 	g_autoptr(FuDevice) parent_hid = NULL;
 	g_autoptr(FuUdevDevice) parent_phys = NULL;
@@ -398,7 +402,8 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 	}
 
 	/* unbind hidraw, then bind it again to get a replug */
-	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (wait_for_replug)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	if (!fu_device_unbind_driver(FU_DEVICE(parent_phys), error))
 		return FALSE;
 	if (!fu_device_bind_driver(FU_DEVICE(parent_phys),
@@ -434,7 +439,7 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, FuProgress *progress, GErro
 			    f34->function_version);
 		return FALSE;
 	}
-	return fu_synaptics_rmi_hid_device_rebind_driver(self, error);
+	return fu_synaptics_rmi_hid_device_rebind_driver(self, TRUE, error);
 }
 
 static gboolean
@@ -453,7 +458,14 @@ fu_synaptics_rmi_hid_device_attach(FuDevice *device, FuProgress *progress, GErro
 		return FALSE;
 
 	/* rebind to rescan PDT with new firmware running */
-	return fu_synaptics_rmi_hid_device_rebind_driver(self, error);
+	if (fu_device_has_private_flag(device,
+				      FU_SYNAPTICS_RMI_HID_DEVICE_FLAG_UPDATE_NEEDS_REBOOT)) {
+		/* rebind, but do not wait for replug -- apply on the next reboot */
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
+		return fu_synaptics_rmi_hid_device_rebind_driver(self, FALSE, error);
+	}
+	return fu_synaptics_rmi_hid_device_rebind_driver(self, TRUE, error);
 }
 
 static gboolean
@@ -540,6 +552,8 @@ fu_synaptics_rmi_hid_device_init(FuSynapticsRmiHidDevice *self)
 	fu_synaptics_rmi_device_set_max_page(FU_SYNAPTICS_RMI_DEVICE(self), 0xff);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_READ);
 	fu_udev_device_add_open_flag(FU_UDEV_DEVICE(self), FU_IO_CHANNEL_OPEN_FLAG_WRITE);
+	fu_device_register_private_flag(FU_DEVICE(self),
+				       FU_SYNAPTICS_RMI_HID_DEVICE_FLAG_UPDATE_NEEDS_REBOOT);
 }
 
 static void
